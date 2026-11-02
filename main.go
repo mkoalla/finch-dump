@@ -1,7 +1,12 @@
 package main
 
-import "log"
+import (
+	"finchd/lib/api"
+	"log"
+	"net/url"
+)
 
 func main() {
-	log.Println("Hello, world!")
+	r, err := api.Get("", &url.Values{})
+	log.Println(r, err)
 }
