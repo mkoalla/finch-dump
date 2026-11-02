@@ -1,6 +1,14 @@
 # finch-dump
 
-vegan rate limiting + anon api access + mass email spam = holy vibe coded
+```sh
+# collect it yourself?
+git clone https://github.com/mkoalla/finch-dump.git
+cd finch-dump && chmod +x collect.sh && ./collect.sh
+# read instructions
+```
+
+:)
+if that guy finds the repo just point ur agent at it
 
 # [aggregate data](./out/aggregate.db)
 # [aerospace eng](./out/aerospace.db)
