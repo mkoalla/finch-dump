@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var API_ROOT = url.URL{
@@ -16,29 +17,29 @@ var API_ROOT = url.URL{
 	Path:   "/api/v1",
 }
 
+// gormable (?)
 type JobEntry struct {
-	ApplyUrl    string   `json:"apply_url,omitempty"`    //": "https://careers.se.com/jobs/139399",
-	Category    string   `json:"category,omitempty"`     //": "FULL_TIME",
-	CompanyLogo string   `json:"company_logo,omitempty"` //": null,
-	CompanyName string   `json:"company_name,omitempty"` //": "Schneider Electric",
-	DatePosted  string   `json:"date_posted,omitempty"`  //": "2026-11-02T00:00:00+00:00",
-	Deadline    string   `json:"deadline,omitempty"`     //": null,
-	ID          string   `json:"id,omitempty"`           //": "091ef9b9-4ac9-471d-9d2c-1b81f3309c2c",
-	Kind        string   `json:"kind,omitempty"`         //": "newgrad",
-	LastSeenAt  string   `json:"last_seen_at,omitempty"` //": "2026-11-02T00:58:05.728777+00:00",
-	LinkKind    string   `json:"link_kind,omitempty"`    //": "posting",
-	Locations   []string `json:"locations,omitempty"`    //": [
-	// "Boston, Massachusetts"
-	// ],
-	Pay       float64 `json:"pay,omitempty"`       //: null,
-	Reposted  bool    `json:"reposted,omitempty"`  //: false,
-	Source    string  `json:"source,omitempty"`    //: "ats_icims",
-	Terms     []any   `json:"terms,omitempty"`     //: [],
-	Title     string  `json:"title,omitempty"`     //: "Energy Tech Accelerator Graduate Program - Boston",
-	Url       string  `json:"url,omitempty"`       //: "https://careers.se.com/jobs/139399",
-	Workplace string  `json:"workplace,omitempty"` //: null
-
+	ID          string     `json:"id,omitempty" gorm:"primaryKey"`
+	ApplyUrl    string     `json:"apply_url,omitempty"`
+	Category    string     `json:"category,omitempty" gorm:"index"`
+	CompanyLogo *string    `json:"company_logo,omitempty"`
+	CompanyName string     `json:"company_name,omitempty" gorm:"index"`
+	DatePosted  *time.Time `json:"date_posted,omitempty" gorm:"index"`
+	Deadline    *time.Time `json:"deadline,omitempty"`
+	Kind        string     `json:"kind,omitempty" gorm:"index"`
+	LastSeenAt  *time.Time `json:"last_seen_at,omitempty"`
+	LinkKind    string     `json:"link_kind,omitempty"`
+	Locations   []string   `json:"locations,omitempty" gorm:"serializer:json"`
+	Pay         *float64   `json:"pay,omitempty"`
+	Reposted    bool       `json:"reposted,omitempty"`
+	Source      string     `json:"source,omitempty"`
+	Terms       []any      `json:"terms,omitempty" gorm:"serializer:json"`
+	Title       string     `json:"title,omitempty"`
+	Url         string     `json:"url,omitempty"`
+	Workplace   *string    `json:"workplace,omitempty"`
 }
+
+// not gorm obj
 type JobsBody struct {
 	Jobs            []JobEntry `json:"jobs,omitempty"`
 	LocationApplied bool       `json:"location_applied,omitempty"`
@@ -79,7 +80,7 @@ func Jobs(major string, limit int) iter.Seq2[*JobEntry, error] {
 			if err != nil {
 				break
 			}
-			cls := sync.OnceFunc(func() { resp.Body.Close() })
+			cls := sync.OnceFunc(func() { resp.Body.Close() }) //nolint
 			if resp.StatusCode != http.StatusOK {
 				cls()
 				yield(nil, fmt.Errorf("HTTP %d", resp.StatusCode))

@@ -1,22 +1,29 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"finchd/lib/api"
+	"finchd/lib/db"
+	"finchd/lib/json"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 )
+
+var AVAILABLE_TYPES = map[string]struct{}{
+	"json":   {},
+	"sqlite": {},
+}
 
 var OUTPUT string
 var COUNT int
 var MAJOR string
+var TYPE string
 
 func init() {
 	if OUTPUT = os.Getenv("OUTPUT_FILE"); OUTPUT == "" {
@@ -34,69 +41,42 @@ func init() {
 	} else {
 		COUNT = 50
 	}
+	TYPE = strings.ToLower(os.Getenv("TYPE"))
+	if TYPE == "" {
+		TYPE = "json"
+	} else if _, ok := AVAILABLE_TYPES[TYPE]; !ok {
+		log.Fatalf("Unavailable filetype: %s", TYPE)
+	}
+
 	MAJOR = os.Getenv("MAJOR")
+
 	log.Printf("Output to: %s", OUTPUT)
+	log.Printf("Output type: %s", TYPE)
 	log.Printf("Max Fetched: %d", COUNT)
 	log.Printf("Major: '%s'", MAJOR)
 }
 
-func write_data(ctx context.Context, buf *bufio.Writer, count *int) (err error) {
-	jobs := api.Jobs(MAJOR, COUNT)
-	first := true
-	for data, err := range jobs {
-		if err != nil {
-			break
-		}
-		if ctx.Err() != nil {
-			return ctx.Err() // stops the iterator; yield returns false
-		}
-		marshalled, err := json.Marshal(data)
-		if err != nil {
-			break
-		}
-		if first {
-			first = false
-		} else {
-			buf.WriteString(",")
-		}
-		buf.Write(marshalled)
-		*count++
-		if *count%50 == 0 {
-			log.Printf("recv %d", *count)
-		}
-	}
-	return nil
-}
-
 func main() {
-	var buf *bufio.Writer
-	if OUTPUT != "stdout" {
-		f, err := os.OpenFile(OUTPUT, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0700)
-		if err != nil {
-			log.Fatal(fmt.Errorf("While opening %s: %w", OUTPUT, err))
-		}
-		buf = bufio.NewWriter(f)
-		defer f.Close()
-	} else {
-		buf = bufio.NewWriter(os.Stdout)
-	}
-	defer buf.Flush()
-
 	// ctrl c
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	count := 0
-	buf.WriteString("[")
-	err := write_data(ctx, buf, &count)
-	buf.WriteString("]")
+	var err error
+	counter := 0
+	jobs := api.Jobs(MAJOR, COUNT)
+	switch TYPE {
+	case "json":
+		err = json.WriteData(OUTPUT, jobs, &counter, &ctx)
+	case "sqlite":
+		err = db.WriteData(OUTPUT, jobs, &counter, &ctx)
+	}
 	if errors.Is(err, context.Canceled) {
 		log.Println("Interrupted")
 		err = nil
 	}
-	log.Printf("Total received: %d", count)
+	log.Printf("Total received: %d", counter)
 
 	if err != nil {
-		log.Fatal(fmt.Errorf("GET Jobs: err"))
+		panic(fmt.Errorf("GET Jobs: err"))
 	}
 }
