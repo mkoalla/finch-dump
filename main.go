@@ -77,6 +77,6 @@ func main() {
 	log.Printf("Total received: %d", counter)
 
 	if err != nil {
-		panic(fmt.Errorf("GET Jobs: err"))
+		panic(fmt.Errorf("GET Jobs: %w", err))
 	}
 }

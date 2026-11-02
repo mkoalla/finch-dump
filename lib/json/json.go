@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"finchd/lib"
 	"finchd/lib/api"
 	"fmt"
 	"iter"
@@ -29,6 +30,13 @@ func WriteData(output string, jobs iter.Seq2[*api.JobEntry, error], count *int, 
 	if _, err = buf.WriteString("["); err != nil {
 		return
 	}
+
+	counted := false
+	defer func() {
+		if counted {
+			fmt.Println()
+		}
+	}()
 	for data, err := range jobs {
 		if err != nil {
 			break
@@ -50,7 +58,8 @@ func WriteData(output string, jobs iter.Seq2[*api.JobEntry, error], count *int, 
 		}
 		*count++
 		if *count%50 == 0 {
-			log.Printf("recv %d", *count)
+			fmt.Printf("\r\033[2K%s recv %d\t(if this is stuck more than 30s, Ctrl-C to stop early)", lib.InteractiveLoading(), *count)
+			counted = true
 		}
 	}
 	_, err = buf.WriteString("]")

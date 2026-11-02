@@ -2,8 +2,10 @@
 .DEFAULT_GOAL := dev
 
 BUILD_PATH := ./build
-dev:
-	@ go run .
+dev: sql
+
+sql:
+	TYPE=sqlite go run .
 
 build:
 	@rm -rf $(BUILD_PATH)/*
