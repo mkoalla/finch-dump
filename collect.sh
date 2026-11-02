@@ -5,7 +5,7 @@ OUTPUT_DIR="./out"
 POSSIBLE_FIELDS="accounting aerospace agricultural architectural biomedical business chemical civil data distribution electrical environmental finance hardware industrial it manufacturing materials mechanical nuclear ocean open petroleum robotics rotational software space"
 
 function exitHelp() {
-    echo -e "usage:\n\t./collect.sh [sqlite | json] [aggregate | all | $POSSIBLE_FIELDS]"
+    echo -e "usage:\n\t./collect.sh [sqlite | json] [aggregate | all | $POSSIBLE_FIELDS] [parallel | ]"
     echo -e "you can include multiple by spacing"
     exit 1
 }
@@ -13,6 +13,8 @@ function exitHelp() {
 if [ "$#" -lt 2 ]; then
     exitHelp
 fi
+
+PARALLEL="$3"
 
 FEND=
 if [ "$1" = "sqlite" ]; then
@@ -47,5 +49,9 @@ read -ra fds <<< "$FIELDS"
 for i in "${fds[@]}"; do
     FILE="$OUTPUT_DIR/$i.$FEND"
     echo "========== $FILE ==========" # cool
-    OUTPUT_FILE="$FILE" MAJOR="$i" COUNT=-1 TYPE="$1" make
+    if [ "$PARALLEL" = "parallel" ]; then
+	    OUTPUT_FILE="$FILE" MAJOR="$i" COUNT=-1 TYPE="$1" make &
+    else
+	    OUTPUT_FILE="$FILE" MAJOR="$i" COUNT=-1 TYPE="$1" make
+    fi
 done
