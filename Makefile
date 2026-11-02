@@ -5,7 +5,7 @@ BUILD_PATH := ./build
 dev: sql
 
 sql:
-	TYPE=sqlite go run .
+	USONLY=1 TYPE=sqlite go run .
 
 build:
 	@rm -rf $(BUILD_PATH)/*

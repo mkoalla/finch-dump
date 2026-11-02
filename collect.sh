@@ -1,8 +1,8 @@
 #!/bin/bash
 
 OUTPUT_DIR="./out"
-POSSIBLE_FIELDS="industrial mechanical aerospace civil chemical business electrical software data petroleum"
-
+# POSSIBLE_FIELDS="aerospace industrial mechanicalcivil chemical business electrical software data petroleum "
+POSSIBLE_FIELDS="accounting aerospace agricultural architectural biomedical business chemical civil data distribution electrical environmental finance hardware industrial it manufacturing materials mechanical nuclear ocean open petroleum robotics rotational software space"
 
 function exitHelp() {
     echo -e "usage:\n\t./collect.sh [sqlite | json] [aggregate | all | $POSSIBLE_FIELDS]"

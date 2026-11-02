@@ -24,10 +24,15 @@ var OUTPUT string
 var COUNT int
 var MAJOR string
 var TYPE string
+var USONLY bool
 
 func init() {
 	if OUTPUT = os.Getenv("OUTPUT_FILE"); OUTPUT == "" {
 		OUTPUT = "stdout"
+	}
+
+	if os.Getenv("USONLY") != "0" {
+		USONLY = true
 	}
 
 	if cnt := os.Getenv("COUNT"); cnt != "" {
@@ -63,7 +68,7 @@ func main() {
 
 	var err error
 	counter := 0
-	jobs := api.Jobs(MAJOR, COUNT)
+	jobs := api.Jobs(MAJOR, COUNT, USONLY)
 	switch TYPE {
 	case "json":
 		err = json.WriteData(OUTPUT, jobs, &counter, &ctx)

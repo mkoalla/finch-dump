@@ -60,7 +60,7 @@ func Get(path string, query *url.Values) (*http.Response, error) {
 	return http.Get(url.String())
 }
 
-func Jobs(major string, limit int) iter.Seq2[*JobEntry, error] {
+func Jobs(major string, limit int, us bool) iter.Seq2[*JobEntry, error] {
 	// aggregate := make([]JobEntry, 0, max(limit, 256))
 	var err error
 
@@ -72,6 +72,9 @@ func Jobs(major string, limit int) iter.Seq2[*JobEntry, error] {
 	query.Set("limit", strconv.Itoa(pageLim)) //enforced
 	if major != "" {
 		query.Set("major", major)
+	}
+	if us {
+		query.Set("us_only", "1")
 	}
 	return func(yield func(*JobEntry, error) bool) {
 		for i := 0; limit == -1 || i < limit; {
